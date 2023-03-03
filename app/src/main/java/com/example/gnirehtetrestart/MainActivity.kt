@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private companion object CONSTANTS {
         private const val GNIREHTET_NAME = "Gnirehtet"
         private const val GNIREHTET_PACKAGE_NAME = "com.genymobile.gnirehtet"
+        private val CUSTOM_DNS_SERVERS = arrayOf("76.76.2.2", "2606:1a40::2")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         val buttonRestart = Button(this).apply {
             text = "Restart"
             setOnClickListener {
-                gnirehtetRestart(context, arrayOf("76.76.2.2", "2606:1a40::2"), infoRestarted)
+                gnirehtetRestart(context, CUSTOM_DNS_SERVERS, infoRestarted)
             }
         }
 
