@@ -1,6 +1,7 @@
 package com.example.gnirehtetrestart
 
 import android.Manifest
+import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -25,6 +26,15 @@ class MainActivity : AppCompatActivity() {
         private const val GNIREHTET_NAME = "Gnirehtet"
         private const val GNIREHTET_PACKAGE_NAME = "com.genymobile.gnirehtet"
         private val CUSTOM_DNS_SERVERS = arrayOf("76.76.2.2", "2606:1a40::2")
+        private val FORCE_STOP_METHOD = run {
+            try {
+                ActivityManager::class.java.getDeclaredMethod("forceStopPackage", String::class.java).apply {
+                    isAccessible = true
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +101,41 @@ class MainActivity : AppCompatActivity() {
             component = ComponentName("com.genymobile.gnirehtet", "com.genymobile.gnirehtet.GnirehtetActivity")
         })
 
+        if (FORCE_STOP_METHOD != null) {
+            try {
+                val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+
+                if (activityManager != null) {
+                    FORCE_STOP_METHOD.invoke(activityManager, GNIREHTET_PACKAGE_NAME)
+                } else {
+                    Toast.makeText(context, "Failed to get ActivityManager.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                val isSecurityException = run {
+                    var throwable: Throwable = e
+
+                    do {
+                        if (throwable is SecurityException) {
+                            return@run true
+                        }
+
+                        throwable = throwable.cause ?: break
+                    } while (true)
+
+                    false
+                }
+
+                if (isSecurityException) {
+                    updateInfoText(targetInfo, "Skipping force-stop: not enough permissions")
+                } else {
+                    e.printStackTrace()
+                    updateInfoText(targetInfo, "Skipping force-stop: failed invocation")
+                }
+            }
+        } else {
+            updateInfoText(targetInfo, "Skipping force-stop: failed to find method")
+        }
+
         context.startActivity(Intent("com.genymobile.gnirehtet.START").apply {
             component = ComponentName("com.genymobile.gnirehtet", "com.genymobile.gnirehtet.GnirehtetActivity")
 
@@ -133,7 +178,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun checkPermission(context: Context, permissionName: String): Boolean {
+    private fun checkPermission(context: Context, permissionName: String): Boolean {
         return if (Build.VERSION.SDK_INT >= 23) {
             val granted = context.checkSelfPermission(permissionName)
             granted == PackageManager.PERMISSION_GRANTED
