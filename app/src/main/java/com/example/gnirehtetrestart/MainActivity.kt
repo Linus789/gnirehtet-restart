@@ -5,6 +5,8 @@ import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -162,7 +164,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun isAppInstalled(context: Context, packageName: String): Boolean {
         return try {
-            context.packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA)
+            context.packageManager.getPackageInfoCompat(packageName, PackageManager.GET_META_DATA)
             true
         } catch (ignored: PackageManager.NameNotFoundException) {
             false
@@ -171,10 +173,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun isAppEnabled(context: Context, packageName: String): Boolean {
         return try {
-            val applicationInfo = context.packageManager.getApplicationInfo(packageName, 0)
+            val applicationInfo = context.packageManager.getApplicationInfoCompat(packageName, 0)
             applicationInfo.enabled
         } catch (e: PackageManager.NameNotFoundException) {
             false
+        }
+    }
+
+    @Throws(PackageManager.NameNotFoundException::class)
+    private fun PackageManager.getPackageInfoCompat(packageName: String, flags: Int): PackageInfo {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(flags.toLong()))
+        } else {
+            @Suppress("DEPRECATION") getPackageInfo(packageName, flags)
+        }
+    }
+
+    @Throws(PackageManager.NameNotFoundException::class)
+    private fun PackageManager.getApplicationInfoCompat(packageName: String, flags: Int): ApplicationInfo {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(flags.toLong()))
+        } else {
+            @Suppress("DEPRECATION") getApplicationInfo(packageName, flags)
         }
     }
 
