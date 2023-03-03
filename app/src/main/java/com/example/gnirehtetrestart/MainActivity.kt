@@ -1,15 +1,20 @@
 package com.example.gnirehtetrestart
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.PermissionChecker
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,10 +48,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val buttonSettings = Button(this).apply {
+            text = "Open Gnirehtet in Settings"
+            setOnClickListener {
+                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$GNIREHTET_PACKAGE_NAME")
+                })
+            }
+        }
+
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(buttonRestart)
             addView(buttonRestartNoDns)
+            addView(buttonSettings)
             addView(infoRestarted)
         }
 
@@ -63,6 +78,11 @@ class MainActivity : AppCompatActivity() {
 
         if (!isAppEnabled(context, GNIREHTET_PACKAGE_NAME)) {
             Toast.makeText(context, "$GNIREHTET_NAME is not enabled.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!checkPermission(context, Manifest.permission.WRITE_SECURE_SETTINGS)) {
+            Toast.makeText(context, "Permission WRITE_SECURE_SETTINGS not granted.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -109,6 +129,16 @@ class MainActivity : AppCompatActivity() {
             applicationInfo.enabled
         } catch (e: PackageManager.NameNotFoundException) {
             false
+        }
+    }
+
+    fun checkPermission(context: Context, permissionName: String): Boolean {
+        return if (Build.VERSION.SDK_INT >= 23) {
+            val granted = context.checkSelfPermission(permissionName)
+            granted == PackageManager.PERMISSION_GRANTED
+        } else {
+            val granted = PermissionChecker.checkSelfPermission(context, permissionName)
+            granted == PermissionChecker.PERMISSION_GRANTED
         }
     }
 
