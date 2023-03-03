@@ -21,10 +21,9 @@ import androidx.core.content.PermissionChecker
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 class MainActivity : AppCompatActivity() {
 
-    private companion object CONSTANTS {
+    private companion object Constants {
         private const val GNIREHTET_NAME = "Gnirehtet"
         private const val GNIREHTET_PACKAGE_NAME = "com.genymobile.gnirehtet"
         private val CUSTOM_DNS_SERVERS = arrayOf("76.76.2.2", "2606:1a40::2")
@@ -64,6 +63,10 @@ class MainActivity : AppCompatActivity() {
         val buttonSettings = Button(this).apply {
             text = "Open Gnirehtet in Settings"
             setOnClickListener {
+                if (!validateGnirehtetInstalled(context)) {
+                    return@setOnClickListener
+                }
+
                 context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = Uri.parse("package:$GNIREHTET_PACKAGE_NAME")
                 })
@@ -81,11 +84,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(layout)
     }
 
+    private fun validateGnirehtetInstalled(context: Context): Boolean {
+        if (!isAppInstalled(context, GNIREHTET_PACKAGE_NAME)) {
+            Toast.makeText(context, "$GNIREHTET_NAME is not installed.", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        return true
+    }
+
     private fun gnirehtetRestart(context: Context, dnsServers: Array<String>?, targetInfo: TextView) {
         targetInfo.text = ""
 
-        if (!isAppInstalled(context, GNIREHTET_PACKAGE_NAME)) {
-            Toast.makeText(context, "$GNIREHTET_NAME is not installed.", Toast.LENGTH_SHORT).show()
+        if (!validateGnirehtetInstalled(context)) {
             return
         }
 
