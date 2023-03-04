@@ -120,8 +120,9 @@ class MainActivity : AppCompatActivity() {
 
                 if (activityManager != null) {
                     FORCE_STOP_METHOD.invoke(activityManager, GNIREHTET_PACKAGE_NAME)
+                    updateInfoText(targetInfo, "$GNIREHTET_NAME force-stopped")
                 } else {
-                    Toast.makeText(context, "Failed to get ActivityManager.", Toast.LENGTH_SHORT).show()
+                    updateInfoText(targetInfo, "Skipping force-stop: failed to get ActivityManager")
                 }
             } catch (e: Exception) {
                 val isSecurityException = run {
